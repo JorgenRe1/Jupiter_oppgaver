@@ -1,0 +1,24 @@
+.red_text{
+  color: red;
+}
+
+.green_bg{
+  background-color: rgba(48, 198, 77, 0.52);
+}
+
+.sjekkListe div:nth-child(odd)[class=row]{
+  background-color: rgba(111, 111, 111, 0.1)!important;
+}
+
+.sjekkListe div div:nth-child(1) input{
+  transform: scale(1.5);
+  margin-left: 5px;
+}
+
+.sjekkListe div div:nth-child(2){
+  text-align: left;
+}
+
+.sjekkListe div div:nth-child(2) input{
+  width: 100%;
+}

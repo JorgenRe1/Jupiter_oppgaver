@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ReactJS - Test</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id='root' class="text-center">
+    </div>
+    <script type="text/babel">
+    class Sjekkliste_app extends React.Component{
+      constructor(props){
+        super(props);
+        this.state = {items: [], name: "", logged_in: 0};
+        //Give access to use of "this" within functions
+        this.newItem = this.newItem.bind(this);
+        this.index_from_id = this.index_from_id.bind(this);
+        this.itemWorked = this.itemWorked.bind(this);
+        this.nameChange = this.nameChange.bind(this);
+        this.deleteItem = this.deleteItem.bind(this);
+        this.editItem = this.editItem.bind(this);
+        this.updateName = this.updateName.bind(this);
+      }
+
+      nameChange(e){
+        //Value of input changed. Update name
+        this.setState({name: e.target.value});
+      }
+
+      newItem(e){
+        //Stop it from refreshing page
+        e.preventDefault();
+        //Dont add empty todos
+        if (!this.state.name.length){
+          return;
+        }
+        //add new item with given value id is current time in milliseconds as it must be unique
+        var time = Date.now();
+        var item = {name: this.state.name, id: time, edit: 0};
+        //Update items list and refresh
+        this.setState({items: this.state.items.concat(item), name: ""});
+      }
+
+      index_from_id(id){
+        //return index of item with id = id
+        //If nothing return -1
+        var items = this.state.items;
+        for (var i = 0; i < items.length; i++){
+          if (items[i].id == id){
+            return i;
+          }
+        }
+        return -1;
+      }
+
+      itemWorked(e){
+        var id = this.index_from_id($(e.target.parentElement.parentElement).data("id"));
+        if (id == -1){
+          return;
+        }
+        this.state.items[id].done = e.target.checked;
+        //Update
+        this.setState({items: this.state.items});
+        console.log(this.state.items);
+      }
+
+      deleteItem(e){
+        //Remove item with id=id from items array
+        var id = this.index_from_id($(e.target.parentElement.parentElement).data("id"));
+        if (id == -1){
+          return;
+        }
+        this.state.items.splice(id, 1);
+        //Update
+        this.setState({items: this.state.items});
+      }
+
+      editItem(e){
+        //Edit item
+        var id = this.index_from_id($(e.target.parentElement.parentElement).data("id"));
+        if (id == -1){
+          return;
+        }
+        this.state.items[id].edit ? this.state.items[id].edit = 0 : this.state.items[id].edit = 1;
+        //Update
+        this.setState({items: this.state.items});
+      }
+
+      updateName(e){
+        //Get id from parent li element...Passing id as a parameter
+        //like others made all items have id= highest value of i...
+        var id = this.index_from_id($(e.target.parentElement.parentElement).data("id"));
+        if (id == -1){
+          return;
+        }
+        this.state.items[id].name = e.target.value;
+        //Update
+        this.setState({items: this.state.items});
+      }
+
+      render(){
+        return (
+        <div>
+          <h1>Sjekkliste applikasjon 2</h1>
+          <div className='row'>
+            <div className='col-md-4'></div>
+            <div className='col-md-4'>
+              {this.state.logged_in ?
+              <div><Sjekkliste items={this.state.items} itemWorked={this.itemWorked} delHandler={this.deleteItem} editHandler={this.editItem} updateName={this.updateName}/>
+              <form onSubmit={this.newItem}>
+                <h3>Add New Item</h3>
+                <input autoFocus type="text" onChange={this.nameChange} value={this.state.name}/><br />
+                <button>Add new item</button>
+              </form></div> : <LoginApp parent={this}/>
+              }
+            </div>
+            <div className='col-md-4'></div>
+          </div>
+        </div>
+        );
+      }
+    }
+
+    class Sjekkliste extends React.Component{
+      render(){
+        //Render the list
+        var i = 0;
+        return(
+        <div className = "sjekkListe">
+          {this.props.items.map(item => (
+            <div className={item.done ? "row green_bg" : "row"} data-id={item.id} key={item.id}>
+              <div className='col-1'>
+                <input type='checkbox' defaultChecked={item.done} onChange={(event) => { this.props.itemWorked(event)}}/>
+              </div>
+              <div className='col-7'>
+                {item.edit ? <input autoFocus type="text" onChange={(event) => { this.props.updateName(event)}} onKeyUp={(event) => { event.keyCode == 13 ? this.props.editHandler(event) : 0}} defaultValue={item.name}/> : item.name}
+              </div>
+            <div className='col-4'>
+              <button onClick={(event) => { this.props.delHandler(event)}}>Delete</button>
+              <button onClick={(event) => { this.props.editHandler(event)}}>{item.edit ? "Save" : "Edit"}</button>
+            </div>
+          </div>
+        ))}
+        </div>
+      );
+      }
+    }
+
+    class LoginApp extends React.Component{
+      constructor(props){
+        super(props);
+        this.state = {username: "", password: "", status: "", parent: props.parent, corr_username: "ad", corr_passwd: 12};
+        this.formHandler = this.formHandler.bind(this);
+        this.userNameChange = this.userNameChange.bind(this);
+        this.psswdChange = this.psswdChange.bind(this);
+      }
+
+      formHandler(e){
+        //Check if password is correct and if true launch sjekkListe app
+        //Prevent normal form behaviour
+        e.preventDefault();
+        if (!this.state.username.length || !this.state.password){
+          //Invalid login
+          this.setState({status: "All fields required!"});
+          return;
+        }
+        this.setState({status: ""});
+        //Post to server...
+        if (this.state.username == this.state.corr_username && this.state.password == this.state.corr_passwd){
+          //Login successfull :)!
+          this.state.parent.setState({logged_in: 1});
+        } else {
+          this.setState({username: "", password: "", status: "Invalid Username or password"});
+        }
+      }
+
+      userNameChange(e){
+        //Read username field onchange
+        this.setState({username: e.target.value});
+      }
+
+      psswdChange(e){
+        //Read password field onchange
+        this.setState({password: e.target.value});
+      }
+
+      render(){
+        return (
+          <div>
+            <form onSubmit={this.formHandler}>
+              <h3>Please Login</h3>
+              <label className='red_text'>{this.state.status}</label>{this.state.status.length != "" ? <br /> : ""}
+              <label>Username:</label><br />
+              <input type="text" onChange={this.userNameChange} value={this.state.username}/><br />
+              <label>Password:</label><br />
+              <input type="password" onChange={this.psswdChange} value={this.state.password}/><br />
+              <button>Login</button>
+            </form>
+            <p>
+              UserName: {this.state.corr_username}<br />
+              Password: {this.state.corr_passwd}
+            </p>
+          </div>
+        );
+      }
+    }
+    ReactDOM.render(
+      <Sjekkliste_app />,
+      document.getElementById('root')
+    );
+
+    </script>
+  </body>
+</html>
